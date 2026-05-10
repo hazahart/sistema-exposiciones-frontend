@@ -1,13 +1,16 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
 
 export default function Login() {
   const [matricula, setMatricula] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Enviando datos:', { matricula, password });
+    navigate('/grupos');
   };
 
   return (
