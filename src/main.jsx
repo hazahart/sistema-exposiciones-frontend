@@ -1,10 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Toaster } from 'sonner'
+import { AuthProvider } from './context/AuthContext'
+import AppRouter from './router/AppRouter'
 import './index.css'
-import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+    <StrictMode>
+        <AuthProvider>
+            <AppRouter />
+            <Toaster richColors position="top-right" />
+        </AuthProvider>
+    </StrictMode>
 )
