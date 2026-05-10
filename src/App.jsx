@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/auth/login';
-// import Grupos from './pages/grupos/grupos';
+import Grupos from './pages/equipos/groups';
 
 function App() {
   return (
@@ -11,7 +11,9 @@ function App() {
         
         {/* Ruta del Login */}
         <Route path="/login" element={<Login />} />
-        
+
+        {/* Ruta de Grupos, crud */}
+        <Route path="/grupos" element={<Grupos />} />
 
       </Routes>
     </Router>
