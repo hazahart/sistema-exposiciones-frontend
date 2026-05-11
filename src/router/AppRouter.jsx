@@ -1,7 +1,7 @@
 import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom'
 import {useAuth} from '../context/AuthContext'
 import Login from '../pages/auth/login'
-import Grupos from '../pages/equipos/groups'
+import Grupos from '../pages/grupos/groups'
 
 const DashboardPlaceholder = () => {
     const {alumno, logout} = useAuth()
