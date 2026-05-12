@@ -1,14 +1,14 @@
-import {useState} from 'react'
-import {useNavigate} from 'react-router-dom'
-import {Lock, User} from 'lucide-react'
-import {toast} from 'sonner'
-import {useAuth} from '../../context/AuthContext'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Lock, User } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Login() {
     const [matricula, setMatricula] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
-    const {login} = useAuth()
+    const { login } = useAuth()
     const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
@@ -18,13 +18,17 @@ export default function Login() {
         try {
             await login(matricula, password)
             toast.success('Bienvenido al sistema')
+            
+            // Al navegar, el AppRouter detectará que loading: true en el context
+            // y mostrará automáticamente el Loading Screen del lince.
             navigate('/dashboard')
         } catch (error) {
             const message = error.response?.data?.message || 'Error al iniciar sesión'
             toast.error(message)
-        } finally {
+            // Solo desactivamos el loading local si falló, para poder reintentar
             setLoading(false)
         }
+        // Nota: Quitamos el 'finally' para que el estado de carga no parpadee
     }
 
     return (
@@ -93,7 +97,7 @@ export default function Login() {
                             disabled={loading}
                             className="w-full rounded-lg bg-green-600 py-3 text-white transition-all hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                            {loading ? 'Entrando...' : 'Iniciar Sesión'}
                         </button>
 
                     </form>

@@ -1,20 +1,47 @@
-import {createContext, useContext, useState} from 'react'
-import {login as loginApi} from '../api/auth.api'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { login as loginApi } from '../api/auth.api'
 
 const AuthContext = createContext(null)
 
-export const AuthProvider = ({children}) => {
-    const [alumno, setAlumno] = useState(() => {
-        const stored = localStorage.getItem('alumno')
-        return stored ? JSON.parse(stored) : null
-    })
+export const AuthProvider = ({ children }) => {
+    const [alumno, setAlumno] = useState(null)
+    const [loading, setLoading] = useState(true)
+
+    // Cargar sesión inicial
+    useEffect(() => {
+        const loadStorage = () => {
+            try {
+                const stored = localStorage.getItem('alumno')
+                if (stored) {
+                    setAlumno(JSON.parse(stored))
+                }
+            } catch (error) {
+                console.error("Error cargando sesión:", error)
+            } finally {
+                setTimeout(() => setLoading(false), 1000); 
+            }
+        }
+        loadStorage()
+    }, [])
 
     const login = async (matricula, password) => {
-        const {token} = await loginApi(matricula, password)
+        const { token } = await loginApi(matricula, password)
         const payload = JSON.parse(decodeURIComponent(escape(atob(token.split('.')[1]))))
+        
         localStorage.setItem('token', token)
         localStorage.setItem('alumno', JSON.stringify(payload))
+        
+        // --- CAMBIO CLAVE ---
+        // Activamos el loading global para que el AppRouter muestre el spinner
+        setLoading(true) 
         setAlumno(payload)
+
+        // Damos un pequeño respiro para que se vea la pantalla de carga del lince
+        // antes de entrar formalmente al dashboard
+        setTimeout(() => {
+            setLoading(false)
+        }, 800)
+        
         return payload
     }
 
@@ -29,6 +56,7 @@ export const AuthProvider = ({children}) => {
             alumno,
             login,
             logout,
+            loading,
             isAdmin: alumno?.rol === 'admin',
             isAuthenticated: !!alumno
         }}>
