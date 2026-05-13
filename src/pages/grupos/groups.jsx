@@ -380,7 +380,7 @@ export default function Grupos() {
                         </div>
                         <div className="flex gap-2 mb-4">
                             <select value={addAlumnoId} onChange={(e) => setAddAlumnoId(e.target.value)}
-                                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-sm">
+                                    className="flex-1 min-w-0 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-sm">
                                 <option value="">Inscribir alumno...</option>
                                 {alumnos
                                     .filter(a => !integrantesModal.alumnos?.find(ia => ia.id_alumno === a.id_alumno))
