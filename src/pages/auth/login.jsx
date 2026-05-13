@@ -27,9 +27,9 @@ export default function Login() {
     }
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-gray-900">
+        <div className="flex h-screen w-full items-center justify-center bg-gray-50">
             <div className="w-full max-w-md p-8">
-                <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div className="overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm">
 
                     <div className="bg-green-600 p-8 text-center">
                         <div className="mb-4">
@@ -45,7 +45,8 @@ export default function Login() {
 
                     <form onSubmit={handleSubmit} className="space-y-6 p-8">
                         <div className="space-y-2">
-                            <label htmlFor="matricula" className="block text-gray-700">No. de Control</label>
+                            <label htmlFor="matricula" className="block text-sm font-medium text-gray-700">No. de
+                                Control</label>
                             <div className="relative">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                     <User className="h-5 w-5 text-gray-400"/>
@@ -56,7 +57,7 @@ export default function Login() {
                                     value={matricula}
                                     onChange={(e) => setMatricula(e.target.value)}
                                     placeholder="Ingresa tu Número de Control"
-                                    className="w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
                                     required
                                     disabled={loading}
                                 />
@@ -64,7 +65,8 @@ export default function Login() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="password" className="block text-gray-700">Contraseña</label>
+                            <label htmlFor="password"
+                                   className="block text-sm font-medium text-gray-700">Contraseña</label>
                             <div className="relative">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                     <Lock className="h-5 w-5 text-gray-400"/>
@@ -75,7 +77,7 @@ export default function Login() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Ingresa tu contraseña"
-                                    className="w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-10 pr-4 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
                                     required
                                     disabled={loading}
                                 />
@@ -85,7 +87,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full rounded-lg bg-green-600 py-3 text-white transition-all hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="w-full rounded-xl bg-green-600 py-3 text-white font-medium transition-all hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {loading ? 'Entrando...' : 'Iniciar Sesión'}
                         </button>
