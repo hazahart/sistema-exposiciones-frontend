@@ -1,8 +1,9 @@
 import apiClient from './apiClient'
 
-export const getAlumnos = async (page = 0, size = 10) => {
-    const params = { page, size }
-    const response = await apiClient.get('/alumnos', { params })
+export const getAlumnos = async (page = 0, size = 10, nombre = '') => {
+    const params = {page, size}
+    if (nombre) params.nombre = nombre
+    const response = await apiClient.get('/alumnos', {params})
     return response.data
 }
 

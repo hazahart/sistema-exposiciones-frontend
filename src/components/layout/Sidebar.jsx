@@ -1,5 +1,5 @@
-import {useEffect} from 'react';
-import {NavLink, useLocation} from 'react-router-dom';
+import {useEffect} from 'react'
+import {NavLink, useLocation} from 'react-router-dom'
 import {
     LayoutDashboard,
     BookOpen,
@@ -8,11 +8,12 @@ import {
     Users2,
     Presentation,
     ClipboardCheck,
+    SlidersHorizontal,
     X
-} from 'lucide-react';
-import {SlidersHorizontal} from 'lucide-react'
+} from 'lucide-react'
+import {useAuth} from '../../context/AuthContext'
 
-const menuItems = [
+const publicItems = [
     {icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard'},
     {icon: BookOpen, label: 'Materias', path: '/materias'},
     {icon: Users, label: 'Grupos', path: '/grupos'},
@@ -20,27 +21,26 @@ const menuItems = [
     {icon: Users2, label: 'Equipos', path: '/equipos'},
     {icon: Presentation, label: 'Exposiciones', path: '/exposiciones'},
     {icon: ClipboardCheck, label: 'Evaluaciones', path: '/evaluaciones'},
+]
+
+const adminItems = [
     {icon: SlidersHorizontal, label: 'Criterios', path: '/criterios'},
-];
+]
 
 export default function Sidebar({isOpen, toggleSidebar}) {
-    const location = useLocation();
+    const location = useLocation()
+    const {isAdmin} = useAuth()
 
-    // EFECTO: Cuando la ruta cambie (navegación), cerramos el sidebar en móvil
     useEffect(() => {
-        if (isOpen && window.innerWidth < 1024) {
-            toggleSidebar();
-        }
-    }, [location]);
+        if (isOpen && window.innerWidth < 1024) toggleSidebar()
+    }, [location])
+
+    const menuItems = isAdmin ? [...publicItems, ...adminItems] : publicItems
 
     return (
         <>
-            {/* Overlay para móviles */}
             {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                    onClick={toggleSidebar}
-                />
+                <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={toggleSidebar}/>
             )}
 
             <aside className={`
@@ -79,5 +79,5 @@ export default function Sidebar({isOpen, toggleSidebar}) {
                 </nav>
             </aside>
         </>
-    );
+    )
 }

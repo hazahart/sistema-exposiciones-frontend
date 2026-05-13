@@ -1,124 +1,378 @@
-import { useState, useEffect } from 'react';
-import { getAlumnos } from '../../api/alumnos.api';
+import {useState, useEffect, useCallback} from 'react'
+import {
+    GraduationCap,
+    Plus,
+    Pencil,
+    Trash2,
+    Loader2,
+    AlertCircle,
+    X,
+    ChevronLeft,
+    ChevronRight,
+    Search
+} from 'lucide-react'
+import {toast} from 'sonner'
+import {useAuth} from '../../context/AuthContext'
+import {getAlumnos, createAlumno, updateAlumno, deleteAlumno} from '../../api/alumnos.api'
 
-const Alumnos = () => {
-  const [alumnos, setAlumnos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const EMPTY_FORM = {matricula: '', nombre: '', correo: '', password: '', rol: 'alumno'}
+const EMPTY_EDIT = {nombre: '', correo: '', password: ''}
 
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const size = 10;
+export default function Alumnos() {
+    const {isAdmin} = useAuth()
 
-  const fetchAlumnos = async (currentPage) => {
-    try {
-      setLoading(true);
-      const data = await getAlumnos(currentPage, size);
-      setAlumnos(data.content || []);
-      setTotalPages(data.totalPages || 0);
-      setTotalElements(data.totalElements || 0);
-    } catch (_err) {
-      setError("No se pudo cargar la lista de alumnos.");
-    } finally {
-      setLoading(false);
+    const [alumnos, setAlumnos] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [page, setPage] = useState(0)
+    const [totalPages, setTotalPages] = useState(0)
+    const [totalElements, setTotalElements] = useState(0)
+    const [search, setSearch] = useState('')
+    const [searchInput, setSearchInput] = useState('')
+    const SIZE = 10
+
+    const [modalOpen, setModalOpen] = useState(false)
+    const [editing, setEditing] = useState(null)
+    const [form, setForm] = useState(EMPTY_FORM)
+    const [formLoading, setFormLoading] = useState(false)
+
+    const [deleteTarget, setDeleteTarget] = useState(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
+
+    const fetchAlumnos = useCallback(async () => {
+        setLoading(true)
+        setError(null)
+        try {
+            const data = await getAlumnos(page, SIZE, search)
+            setAlumnos(data.content || [])
+            setTotalPages(data.totalPages || 0)
+            setTotalElements(data.totalElements || 0)
+        } catch {
+            setError('No se pudo cargar la lista de alumnos.')
+        } finally {
+            setLoading(false)
+        }
+    }, [page, search])
+
+    useEffect(() => {
+        fetchAlumnos()
+    }, [fetchAlumnos])
+
+    const handleSearch = (e) => {
+        e.preventDefault()
+        setSearch(searchInput)
+        setPage(0)
     }
-  };
 
-  useEffect(() => {
-    fetchAlumnos(page);
-  }, [page]);
+    const openCreate = () => {
+        setEditing(null)
+        setForm(EMPTY_FORM)
+        setModalOpen(true)
+    }
 
-  if (loading && alumnos.length === 0) {
+    const openEdit = (alumno) => {
+        setEditing(alumno)
+        setForm({...EMPTY_EDIT})
+        setModalOpen(true)
+    }
+
+    const closeModal = () => {
+        setModalOpen(false)
+        setEditing(null)
+        setForm(EMPTY_FORM)
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setFormLoading(true)
+        try {
+            if (editing) {
+                const updates = {}
+                if (form.nombre) updates.nombre = form.nombre
+                if (form.correo) updates.correo = form.correo
+                if (form.password) updates.password = form.password
+                if (!Object.keys(updates).length) {
+                    toast.error('Ingresa al menos un campo para actualizar')
+                    setFormLoading(false)
+                    return
+                }
+                await updateAlumno(editing.id_alumno, updates)
+                toast.success('Alumno actualizado correctamente')
+            } else {
+                if (!form.matricula || !form.nombre || !form.password) {
+                    toast.error('Matrícula, nombre y contraseña son requeridos')
+                    setFormLoading(false)
+                    return
+                }
+                await createAlumno(form)
+                toast.success('Alumno registrado correctamente')
+            }
+            closeModal()
+            fetchAlumnos()
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error al guardar el alumno')
+        } finally {
+            setFormLoading(false)
+        }
+    }
+
+    const handleDelete = async () => {
+        setDeleteLoading(true)
+        try {
+            await deleteAlumno(deleteTarget.id_alumno)
+            toast.success('Alumno eliminado correctamente')
+            setDeleteTarget(null)
+            if (alumnos.length === 1 && page > 0) setPage(page - 1)
+            else fetchAlumnos()
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error al eliminar el alumno')
+        } finally {
+            setDeleteLoading(false)
+        }
+    }
+
+    const ROL_BADGE = {
+        admin: 'bg-purple-50 text-purple-700',
+        alumno: 'bg-green-50 text-green-700',
+    }
+
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-  return (
-    <div className="w-full p-4 lg:p-8">
-      {/* Encabezado */}
-      <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 rounded-3xl p-8 mb-8 shadow-2xl text-white">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight mb-2">Directorio de Alumnos</h1>
-            <p className="text-blue-100 text-lg opacity-90">Gestión centralizada de expedientes estudiantiles</p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl text-center">
-            <span className="block text-blue-200 text-xs uppercase font-bold tracking-widest">Registros Totales</span>
-            <span className="text-3xl font-black">{totalElements}</span>
-          </div>
-        </div>
-      </div>
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <GraduationCap className="text-green-600" size={26}/>
+                        Alumnos
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">
+                        {totalElements} {totalElements === 1 ? 'alumno registrado' : 'alumnos registrados'}
+                    </p>
+                </div>
+                {isAdmin && (
+                    <button onClick={openCreate}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all shadow-sm">
+                        <Plus size={18}/>
+                        Nuevo alumno
+                    </button>
+                )}
+            </div>
 
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl mb-6 shadow-md flex items-center gap-3">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          <p className="font-medium">{error}</p>
-        </div>
-      )}
+            <form onSubmit={handleSearch} className="mb-4 flex gap-2">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                    <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
+                           placeholder="Buscar por nombre..."
+                           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"/>
+                </div>
+                <button type="submit"
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all">
+                    Buscar
+                </button>
+                {search && (
+                    <button type="button" onClick={() => {
+                        setSearch('');
+                        setSearchInput('');
+                        setPage(0)
+                    }}
+                            className="flex items-center gap-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">
+                        <X size={16}/> Limpiar
+                    </button>
+                )}
+            </form>
 
-      {/* Tabla Expandida */}
-      <div className="bg-white shadow-2xl rounded-3xl border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50">
-                <th className="px-8 py-6 text-xs font-bold text-gray-400 uppercase tracking-widest border-b">No. Control</th>
-                <th className="px-8 py-6 text-xs font-bold text-gray-400 uppercase tracking-widest border-b">Nombre Completo</th>
-                <th className="px-8 py-6 text-xs font-bold text-gray-400 uppercase tracking-widest border-b">Correo Institucional</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {alumnos.map((alumno) => (
-                <tr key={alumno.id_alumno} className="hover:bg-blue-50/40 transition-all duration-200 group">
-                  <td className="px-8 py-6">
-                    <span className="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl text-sm font-black border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                      {alumno.no_control || alumno.matricula || '---'}
-                    </span>
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="font-bold text-gray-800 text-lg">{alumno.nombre} {alumno.apellido}</div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-3 text-gray-600 font-medium">
-                      <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
-                        <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                      </div>
-                      {alumno.email || alumno.correo}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                {loading ? (
+                    <div className="flex items-center justify-center h-48 text-gray-400">
+                        <Loader2 className="animate-spin mr-2 text-green-600" size={28}/>
+                        <span>Cargando alumnos...</span>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                ) : error ? (
+                    <div className="flex items-center justify-center h-48 text-red-500 gap-2">
+                        <AlertCircle size={20}/><span>{error}</span>
+                    </div>
+                ) : alumnos.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                        <GraduationCap size={40} className="mb-3 opacity-20"/>
+                        <p className="text-sm">No se encontraron alumnos</p>
+                    </div>
+                ) : (
+                    <table className="w-full">
+                        <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100">
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">No.
+                                Control
+                            </th>
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Correo</th>
+                            <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rol</th>
+                            {isAdmin &&
+                                <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                        {alumnos.map((a) => (
+                            <tr key={a.id_alumno} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-6 py-4">
+                    <span
+                        className="inline-block bg-green-50 text-green-700 text-xs font-mono font-semibold px-2.5 py-1 rounded-lg">
+                      {a.matricula}
+                    </span>
+                                </td>
+                                <td className="px-6 py-4 font-medium text-gray-900">{a.nombre}</td>
+                                <td className="px-6 py-4 text-gray-500 text-sm">{a.correo}</td>
+                                <td className="px-6 py-4 text-center">
+                    <span
+                        className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ROL_BADGE[a.rol] || 'bg-gray-50 text-gray-600'}`}>
+                      {a.rol}
+                    </span>
+                                </td>
+                                {isAdmin && (
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            <button onClick={() => openEdit(a)}
+                                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                    title="Editar">
+                                                <Pencil size={16}/>
+                                            </button>
+                                            <button onClick={() => setDeleteTarget(a)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Eliminar">
+                                                <Trash2 size={16}/>
+                                            </button>
+                                        </div>
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 px-1">
+                    <p className="text-sm text-gray-500">Página {page + 1} de {totalPages}</p>
+                    <div className="flex gap-2">
+                        <button onClick={() => setPage(p => p - 1)} disabled={page === 0}
+                                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <ChevronLeft size={16}/> Anterior
+                        </button>
+                        <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}
+                                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                            Siguiente <ChevronRight size={16}/>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {modalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-bold text-gray-900">{editing ? 'Editar alumno' : 'Nuevo alumno'}</h2>
+                            <button onClick={closeModal} className="text-gray-400 hover:text-gray-600"><X size={20}/>
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {!editing && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">No. de
+                                        Control</label>
+                                    <input type="text" value={form.matricula}
+                                           onChange={(e) => setForm(f => ({...f, matricula: e.target.value}))}
+                                           placeholder="Ej: 21030017"
+                                           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                           disabled={formLoading} required/>
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Nombre {editing &&
+                                    <span className="text-gray-400 font-normal">(dejar vacío para no cambiar)</span>}
+                                </label>
+                                <input type="text" value={form.nombre}
+                                       onChange={(e) => setForm(f => ({...f, nombre: e.target.value}))}
+                                       placeholder="Nombre completo"
+                                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                       disabled={formLoading}/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Correo
+                                    institucional</label>
+                                <input type="email" value={form.correo}
+                                       onChange={(e) => setForm(f => ({...f, correo: e.target.value}))}
+                                       placeholder="matricula@itcelaya.edu.mx"
+                                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                       disabled={formLoading}/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Contraseña {editing &&
+                                    <span className="text-gray-400 font-normal">(dejar vacío para no cambiar)</span>}
+                                </label>
+                                <input type="password" value={form.password}
+                                       onChange={(e) => setForm(f => ({...f, password: e.target.value}))}
+                                       placeholder={editing ? '••••••' : 'Mínimo 6 caracteres'}
+                                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                       disabled={formLoading}/>
+                            </div>
+                            {!editing && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                                    <select value={form.rol}
+                                            onChange={(e) => setForm(f => ({...f, rol: e.target.value}))}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                                            disabled={formLoading}>
+                                        <option value="alumno">Alumno</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                            )}
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={closeModal} disabled={formLoading}
+                                        className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={formLoading}
+                                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
+                                    {formLoading && <Loader2 size={16} className="animate-spin"/>}
+                                    {editing ? 'Guardar cambios' : 'Registrar'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-red-100 p-2 rounded-lg"><Trash2 className="text-red-600" size={20}/>
+                            </div>
+                            <h2 className="text-lg font-bold text-gray-900">Eliminar alumno</h2>
+                        </div>
+                        <p className="text-gray-600 mb-1">¿Estás seguro de eliminar a:</p>
+                        <p className="font-semibold text-gray-900 mb-4">{deleteTarget.nombre}</p>
+                        <p className="text-xs text-gray-400 mb-5">Si tiene evaluaciones registradas no podrá
+                            eliminarse.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDeleteTarget(null)} disabled={deleteLoading}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
+                                Cancelar
+                            </button>
+                            <button onClick={handleDelete} disabled={deleteLoading}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
+                                {deleteLoading && <Loader2 size={16} className="animate-spin"/>}
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-
-      {/* Paginación */}
-      <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4 bg-gray-50/50 p-6 rounded-2xl">
-        <button
-          disabled={page === 0 || loading}
-          onClick={() => setPage(p => p - 1)}
-          className="w-full sm:w-auto flex items-center justify-center px-8 py-3 font-bold text-gray-700 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:border-gray-100 transition-all shadow-sm"
-        >
-          Anterior
-        </button>
-        <span className="text-gray-500 font-medium">
-          Página <span className="text-blue-600 font-black">{page + 1}</span> de <span className="text-gray-800 font-black">{totalPages}</span>
-        </span>
-        <button
-          disabled={page >= totalPages - 1 || loading}
-          onClick={() => setPage(p => p + 1)}
-          className="w-full sm:w-auto flex items-center justify-center px-8 py-3 font-bold text-gray-700 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:border-gray-100 transition-all shadow-sm"
-        >
-          Siguiente
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default Alumnos;
+    )
+}

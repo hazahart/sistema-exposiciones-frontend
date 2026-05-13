@@ -1,20 +1,27 @@
-import axios from 'axios';
+import apiClient from './apiClient'
 
-// Asegúrate de que VITE_API_URL en tu .env termine en /api/v1
-const API_URL = import.meta.env.VITE_API_URL || 'https://sistema-exposiciones-backend.onrender.com/api/v1';
+export const getDashboardStats = async (id_alumno) => {
+    const [materiasRes, gruposRes, exposicionesRes, evaluacionesRes] = await Promise.all([
+        apiClient.get('/materias', {params: {size: 1}}),
+        apiClient.get('/grupos', {params: {size: 1}}),
+        apiClient.get('/exposiciones', {params: {size: 100}}),
+        apiClient.get('/evaluaciones', {params: {size: 100, id_alumno_evaluador: id_alumno}})
+    ])
 
-export const getDashboardStats = async () => {
-    const token = localStorage.getItem('token');
-    
-    if (!token) throw new Error('No hay token de autenticación');
+    const exposiciones = exposicionesRes.data.content || []
+    const ahora = new Date()
+    const en7dias = new Date(ahora.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-    const response = await axios.get(`${API_URL}/alumnos/stats/dashboard`, {
-        headers: { 
-            Authorization: `Bearer ${token}` 
-        }
-    });
-    
-    // Verificamos en consola qué llega
-    console.log("Datos recibidos del backend:", response.data);
-    return response.data;
-};
+    const proximas = exposiciones.filter(e => {
+        const fecha = new Date(e.fecha_programada)
+        return fecha >= ahora && fecha <= en7dias && e.estado === 'pendiente'
+    })
+
+    return {
+        materias_activas: materiasRes.data.totalElements || 0,
+        grupos_totales: gruposRes.data.totalElements || 0,
+        exposiciones: exposicionesRes.data.totalElements || 0,
+        evaluadas: evaluacionesRes.data.totalElements || 0,
+        proximas_exposiciones: proximas
+    }
+}

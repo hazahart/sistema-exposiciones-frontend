@@ -73,17 +73,18 @@ export default function Equipos() {
     }, [fetchEquipos])
 
     useEffect(() => {
-        if (!isAdmin) return
         const fetchSelect = async () => {
             try {
-                const [gRes, aRes, mRes] = await Promise.all([
-                    apiClient.get('/grupos', {params: {size: 100}}),
-                    apiClient.get('/alumnos', {params: {size: 100}}),
-                    apiClient.get('/materias', {params: {size: 100}})
+                const [mRes, gRes] = await Promise.all([
+                    apiClient.get('/materias', {params: {size: 100}}),
+                    apiClient.get('/grupos', {params: {size: 100}})
                 ])
-                setGrupos(gRes.data.content || [])
-                setAlumnos(aRes.data.content || [])
                 setMaterias(mRes.data.content || [])
+                setGrupos(gRes.data.content || [])
+                if (isAdmin) {
+                    const aRes = await apiClient.get('/alumnos', {params: {size: 100}})
+                    setAlumnos(aRes.data.content || [])
+                }
             } catch {
             }
         }
