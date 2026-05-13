@@ -29,24 +29,6 @@ export const getGrupoById = async (id) => {
 };
 
 /**
- * GESTIÓN DE ALUMNOS EN GRUPOS
- */
-
-// Inscribir alumno al grupo
-export const addAlumnoToGrupo = async (idGrupo, idAlumno) => {
-  const response = await api.post(`/grupos/${idGrupo}/alumnos`, { id_alumno: idAlumno });
-  return response.data;
-};
-
-// Eliminar alumno del grupo
-export const removeAlumnoFromGrupo = async (idGrupo, idAlumno) => {
-  const response = await api.delete(`/grupos/${idGrupo}/alumnos`, {
-    data: { id_alumno: idAlumno }
-  });
-  return response.data;
-};
-
-/**
  * GESTIÓN DE GRUPOS (Solo Admin en Backend)
  */
 
