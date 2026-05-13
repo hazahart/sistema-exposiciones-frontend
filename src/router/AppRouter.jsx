@@ -5,7 +5,8 @@ import Grupos from '../pages/grupos/groups';
 import Equipos from '../pages/equipos/equipos';
 import Dashboard from '../pages/dashboard/Dashboard';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import LoadingScreen from '../components/ui/LoadingScreen'; // Asegúrate de crear este archivo
+import LoadingScreen from '../components/ui/LoadingScreen';
+import Materias from "../pages/materias/Materias.jsx";
 
 // Componente para proteger rutas privadas
 const PrivateRoute = ({ children }) => {
@@ -53,7 +54,7 @@ const AppRouter = () => {
                     <Route path="grupos" element={<Grupos />} />
                     <Route path="equipos" element={<Equipos />} />
                     {/* Agrega aquí las futuras páginas */}
-                    <Route path="materias" element={<div className="p-4">Próximamente: Materias</div>} />
+                    <Route path="materias" element={<Materias />} />
                     <Route path="alumnos" element={<div className="p-4">Próximamente: Alumnos</div>} />
                     <Route path="exposiciones" element={<div className="p-4">Próximamente: Exposiciones</div>} />
                     <Route path="evaluaciones" element={<div className="p-4">Próximamente: Evaluaciones</div>} />
