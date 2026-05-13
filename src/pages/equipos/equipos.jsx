@@ -81,15 +81,11 @@ export default function Equipos() {
                 ])
                 setMaterias(mRes.data.content || [])
                 setGrupos(gRes.data.content || [])
-                if (isAdmin) {
-                    const aRes = await apiClient.get('/alumnos', {params: {size: 100}})
-                    setAlumnos(aRes.data.content || [])
-                }
             } catch {
             }
         }
         fetchSelect()
-    }, [isAdmin])
+    }, [])
 
     const getNombreMateria = (id_materia) => {
         const m = materias.find(m => m.id_materia === id_materia)
@@ -116,6 +112,16 @@ export default function Equipos() {
         setModalOpen(false)
         setEditing(null)
         setForm(EMPTY_FORM)
+    }
+
+    const openIntegrantes = async (equipo) => {
+        setIntegrantesModal(equipo)
+        setAddAlumnoId('')
+        try {
+            const res = await apiClient.get(`/grupos/${equipo.id_grupo}`)
+            setAlumnos(res.data.alumnos || [])
+        } catch {
+        }
     }
 
     const handleSubmit = async (e) => {
@@ -239,7 +245,7 @@ export default function Equipos() {
                                 <div className="flex gap-1">
                                     {isAdmin && (
                                         <>
-                                            <button onClick={() => setIntegrantesModal(equipo)}
+                                            <button onClick={() => openIntegrantes(equipo)}
                                                     className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                     title="Gestionar integrantes">
                                                 <UserPlus size={15}/>
@@ -368,10 +374,10 @@ export default function Equipos() {
                             <button onClick={() => setIntegrantesModal(null)}
                                     className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
                         </div>
-                        <div className="flex gap-2 mb-4">
+                        <div className="flex gap-2 mb-4 items-center">
                             <select value={addAlumnoId} onChange={(e) => setAddAlumnoId(e.target.value)}
                                     className="flex-1 min-w-0 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-sm">
-                                <option value="">Agregar alumno...</option>
+                                <option value="">Agregar alumno del grupo...</option>
                                 {alumnos
                                     .filter(a => !integrantesModal.alumnos?.find(ia => ia.id_alumno === a.id_alumno))
                                     .map(a => (
@@ -379,7 +385,7 @@ export default function Equipos() {
                                     ))}
                             </select>
                             <button onClick={handleAddAlumno} disabled={!addAlumnoId || integrantesLoading}
-                                    className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
+                                    className="flex-shrink-0 flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
                                 {integrantesLoading ? <Loader2 size={16} className="animate-spin"/> :
                                     <UserPlus size={16}/>}
                             </button>
