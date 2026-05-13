@@ -1,166 +1,456 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Search, Users, AlertCircle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getGrupos } from '../../api/grupos.api'; // Ajusta la ruta según tu proyecto
-import LoadingScreen from '../../components/ui/LoadingScreen';
+import {useState, useEffect, useCallback} from 'react'
+import {
+    Users,
+    Plus,
+    Pencil,
+    Trash2,
+    Loader2,
+    AlertCircle,
+    X,
+    ChevronLeft,
+    ChevronRight,
+    Search,
+    UserPlus,
+    UserMinus
+} from 'lucide-react'
+import {toast} from 'sonner'
+import {useAuth} from '../../context/AuthContext'
+import {
+    getGrupos,
+    createGrupo,
+    updateGrupo,
+    deleteGrupo,
+    addAlumnoToGrupo,
+    removeAlumnoFromGrupo
+} from '../../api/grupos.api'
+import apiClient from '../../api/apiClient'
+
+const EMPTY_FORM = {nombre_grupo: '', id_materia: ''}
 
 export default function Grupos() {
-  const [grupos, setGrupos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+    const {isAdmin} = useAuth()
 
-  // Estados para Paginación desde el Backend
-  const [currentPage, setCurrentPage] = useState(0); // Supabase usa base 0
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalElements, setTotalElements] = useState(0);
-  const pageSize = 10;
+    const [grupos, setGrupos] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [page, setPage] = useState(0)
+    const [totalPages, setTotalPages] = useState(0)
+    const [totalElements, setTotalElements] = useState(0)
+    const [search, setSearch] = useState('')
+    const [searchInput, setSearchInput] = useState('')
+    const SIZE = 10
 
-  const fetchGrupos = useCallback(async () => {
-    try {
-      setLoading(true);
-      setErrorMessage(null);
-      
-      // Llamada al API con parámetros de paginación
-      const response = await getGrupos(currentPage, pageSize);
-      
-      // Según tu controlador: { content, page, size, totalElements, totalPages }
-      setGrupos(response.content || []);
-      setTotalPages(response.totalPages || 1);
-      setTotalElements(response.totalElements || 0);
-    } catch (err) {
-      console.error(err);
-      setErrorMessage("Error al conectar con el servidor de IT Celaya.");
-    } finally {
-      setLoading(false);
+    const [materias, setMaterias] = useState([])
+    const [alumnos, setAlumnos] = useState([])
+
+    const [modalOpen, setModalOpen] = useState(false)
+    const [editing, setEditing] = useState(null)
+    const [form, setForm] = useState(EMPTY_FORM)
+    const [formLoading, setFormLoading] = useState(false)
+
+    const [deleteTarget, setDeleteTarget] = useState(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
+
+    const [integrantesModal, setIntegrantesModal] = useState(null)
+    const [addAlumnoId, setAddAlumnoId] = useState('')
+    const [integrantesLoading, setIntegrantesLoading] = useState(false)
+
+    const fetchGrupos = useCallback(async () => {
+        setLoading(true)
+        setError(null)
+        try {
+            const data = await getGrupos(page, SIZE)
+            setGrupos(data.content)
+            setTotalPages(data.totalPages)
+            setTotalElements(data.totalElements)
+        } catch {
+            setError('No se pudieron cargar los grupos.')
+        } finally {
+            setLoading(false)
+        }
+    }, [page])
+
+    useEffect(() => {
+        fetchGrupos()
+    }, [fetchGrupos])
+
+    useEffect(() => {
+        const fetchSelect = async () => {
+            try {
+                const [mRes, aRes] = await Promise.all([
+                    apiClient.get('/materias', {params: {size: 100}}),
+                    apiClient.get('/alumnos', {params: {size: 100}})
+                ])
+                setMaterias(mRes.data.content || [])
+                setAlumnos(aRes.data.content || [])
+            } catch {
+            }
+        }
+        fetchSelect()
+    }, [])
+
+    const getNombreMateria = (id) => {
+        const m = materias.find(m => m.id_materia === id)
+        return m ? `${m.clave_materia} — ${m.nombre_materia}` : `Materia #${id}`
     }
-  }, [currentPage]);
 
-  useEffect(() => {
-    fetchGrupos();
-  }, [fetchGrupos]);
+    const filteredGrupos = grupos.filter(g =>
+        g.nombre_grupo.toLowerCase().includes(search.toLowerCase())
+    )
 
-  // Filtrado local para la búsqueda rápida sobre la página actual
-  const filteredGrupos = grupos.filter(grupo =>
-    grupo.nombre_grupo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const handleSearch = (e) => {
+        e.preventDefault()
+        setSearch(searchInput)
+        setPage(0)
+    }
 
-  if (loading && grupos.length === 0) return <LoadingScreen message="Cargando grupos..." />;
+    const openCreate = () => {
+        setEditing(null)
+        setForm(EMPTY_FORM)
+        setModalOpen(true)
+    }
 
-  return (
-    <div className="p-8 w-full max-w-7xl mx-auto animate-in fade-in duration-500">
-      
-      {/* Header - Se eliminó "Nuevo Grupo" */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 text-center md:text-left">
-        <div className="w-full">
-          <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-            <div className="bg-green-100 p-2 rounded-lg text-green-700">
-              <Users size={28} />
+    const openEdit = (grupo) => {
+        setEditing(grupo)
+        setForm({nombre_grupo: grupo.nombre_grupo, id_materia: grupo.id_materia})
+        setModalOpen(true)
+    }
+
+    const closeModal = () => {
+        setModalOpen(false)
+        setEditing(null)
+        setForm(EMPTY_FORM)
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        if (!form.nombre_grupo.trim() || !form.id_materia) {
+            toast.error('Todos los campos son requeridos')
+            return
+        }
+        setFormLoading(true)
+        try {
+            const payload = {nombre_grupo: form.nombre_grupo, id_materia: parseInt(form.id_materia)}
+            if (editing) {
+                await updateGrupo(editing.id_grupo, payload)
+                toast.success('Grupo actualizado correctamente')
+            } else {
+                await createGrupo(payload)
+                toast.success('Grupo creado correctamente')
+            }
+            closeModal()
+            fetchGrupos()
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error al guardar el grupo')
+        } finally {
+            setFormLoading(false)
+        }
+    }
+
+    const handleDelete = async () => {
+        setDeleteLoading(true)
+        try {
+            await deleteGrupo(deleteTarget.id_grupo)
+            toast.success('Grupo eliminado correctamente')
+            setDeleteTarget(null)
+            if (grupos.length === 1 && page > 0) setPage(page - 1)
+            else fetchGrupos()
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error al eliminar el grupo')
+        } finally {
+            setDeleteLoading(false)
+        }
+    }
+
+    const handleAddAlumno = async () => {
+        if (!addAlumnoId) return
+        setIntegrantesLoading(true)
+        try {
+            await addAlumnoToGrupo(integrantesModal.id_grupo, parseInt(addAlumnoId))
+            toast.success('Alumno inscrito al grupo')
+            setAddAlumnoId('')
+            fetchGrupos()
+            const updated = await apiClient.get(`/grupos/${integrantesModal.id_grupo}`)
+            setIntegrantesModal(updated.data)
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error al inscribir alumno')
+        } finally {
+            setIntegrantesLoading(false)
+        }
+    }
+
+    const handleRemoveAlumno = async (id_alumno) => {
+        setIntegrantesLoading(true)
+        try {
+            await removeAlumnoFromGrupo(integrantesModal.id_grupo, id_alumno)
+            toast.success('Alumno removido del grupo')
+            fetchGrupos()
+            const updated = await apiClient.get(`/grupos/${integrantesModal.id_grupo}`)
+            setIntegrantesModal(updated.data)
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error al remover alumno')
+        } finally {
+            setIntegrantesLoading(false)
+        }
+    }
+
+    return (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <Users className="text-green-600" size={26}/>
+                        Grupos
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">
+                        {totalElements} {totalElements === 1 ? 'grupo registrado' : 'grupos registrados'}
+                    </p>
+                </div>
+                {isAdmin && (
+                    <button onClick={openCreate}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all shadow-sm">
+                        <Plus size={18}/>
+                        Nuevo grupo
+                    </button>
+                )}
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Listado de Grupos</h1>
-          </div>
-          <p className="text-gray-500">Consulta los grupos registrados y el total de alumnos inscritos.</p>
-        </div>
-      </div>
 
-      {/* Barra de Búsqueda */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex items-center">
-        <div className="relative w-full max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Filtrar por nombre en esta página..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-all"
-          />
-        </div>
-        {loading && <Loader2 className="ml-4 animate-spin text-green-600" size={20} />}
-      </div>
+            <form onSubmit={handleSearch} className="mb-4 flex gap-2">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
+                    <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
+                           placeholder="Filtrar por nombre..."
+                           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"/>
+                </div>
+                <button type="submit"
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all">
+                    Buscar
+                </button>
+                {search && (
+                    <button type="button" onClick={() => {
+                        setSearch('');
+                        setSearchInput('');
+                        setPage(0)
+                    }}
+                            className="flex items-center gap-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50">
+                        <X size={16}/> Limpiar
+                    </button>
+                )}
+            </form>
 
-      {/* Manejo de Errores */}
-      {errorMessage && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
-          <AlertCircle className="mr-3" /> {errorMessage}
-        </div>
-      )}
-
-      {/* Tabla */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 uppercase text-xs font-semibold">
-                <th className="p-4">ID</th>
-                <th className="p-4">Nombre del Grupo</th>
-                <th className="p-4">ID Materia</th>
-                <th className="p-4">Alumnos</th>
-                <th className="p-4 text-center">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredGrupos.length > 0 ? (
-                filteredGrupos.map((grupo) => (
-                  <tr key={grupo.id_grupo} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4 text-gray-500 font-medium">#{grupo.id_grupo}</td>
-                    <td className="p-4 text-gray-800 font-semibold">{grupo.nombre_grupo}</td>
-                    <td className="p-4">
-                      <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">
-                        MAT-{grupo.id_materia}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Users size={16} className="text-green-600" />
-                        <span className="font-medium">{grupo.alumnos?.length || 0} inscritos</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Activo
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="p-12 text-center text-gray-500">
-                    <div className="flex flex-col items-center justify-center">
-                      <Users size={48} className="text-gray-200 mb-2" />
-                      <p>No se encontraron grupos disponibles.</p>
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                {loading ? (
+                    <div className="flex items-center justify-center h-48 text-gray-400">
+                        <Loader2 className="animate-spin mr-2 text-green-600" size={28}/>
+                        <span>Cargando grupos...</span>
                     </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : error ? (
+                    <div className="flex items-center justify-center h-48 text-red-500 gap-2">
+                        <AlertCircle size={20}/><span>{error}</span>
+                    </div>
+                ) : filteredGrupos.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                        <Users size={40} className="mb-3 opacity-20"/>
+                        <p className="text-sm">No se encontraron grupos</p>
+                    </div>
+                ) : (
+                    <table className="w-full">
+                        <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100">
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Grupo</th>
+                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Materia</th>
+                            <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Alumnos</th>
+                            {isAdmin &&
+                                <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                        {filteredGrupos.map((grupo) => (
+                            <tr key={grupo.id_grupo} className="hover:bg-gray-50 transition-colors">
+                                <td className="px-6 py-4 font-medium text-gray-900">{grupo.nombre_grupo}</td>
+                                <td className="px-6 py-4 text-gray-600 text-sm">{getNombreMateria(grupo.id_materia)}</td>
+                                <td className="px-6 py-4 text-center">
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-600">
+                      <Users size={14} className="text-green-500"/>
+                        {grupo.alumnos?.length || 0}
+                    </span>
+                                </td>
+                                {isAdmin && (
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            <button onClick={() => setIntegrantesModal(grupo)}
+                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                    title="Gestionar alumnos">
+                                                <UserPlus size={15}/>
+                                            </button>
+                                            <button onClick={() => openEdit(grupo)}
+                                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                    title="Editar">
+                                                <Pencil size={16}/>
+                                            </button>
+                                            <button onClick={() => setDeleteTarget(grupo)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Eliminar">
+                                                <Trash2 size={16}/>
+                                            </button>
+                                        </div>
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
 
-        {/* Paginación Real */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm text-gray-600 font-medium">
-            Mostrando página <span className="text-gray-900">{currentPage + 1}</span> de <span className="text-gray-900">{totalPages}</span> ({totalElements} grupos totales)
-          </span>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-              disabled={currentPage === 0 || loading}
-              className="flex items-center px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              <ChevronLeft size={18} className="mr-1" /> Anterior
-            </button>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-              disabled={currentPage >= totalPages - 1 || loading}
-              className="flex items-center px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              Siguiente <ChevronRight size={18} className="ml-1" />
-            </button>
-          </div>
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 px-1">
+                    <p className="text-sm text-gray-500">Página {page + 1} de {totalPages}</p>
+                    <div className="flex gap-2">
+                        <button onClick={() => setPage(p => p - 1)} disabled={page === 0}
+                                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <ChevronLeft size={16}/> Anterior
+                        </button>
+                        <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}
+                                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                            Siguiente <ChevronRight size={16}/>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {modalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-bold text-gray-900">{editing ? 'Editar grupo' : 'Nuevo grupo'}</h2>
+                            <button onClick={closeModal} className="text-gray-400 hover:text-gray-600"><X size={20}/>
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del grupo</label>
+                                <input type="text" value={form.nombre_grupo}
+                                       onChange={(e) => setForm(f => ({...f, nombre_grupo: e.target.value}))}
+                                       placeholder="Ej: Grupo A"
+                                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                       disabled={formLoading} required/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Materia</label>
+                                <select value={form.id_materia}
+                                        onChange={(e) => setForm(f => ({...f, id_materia: e.target.value}))}
+                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                                        disabled={formLoading} required>
+                                    <option value="">Selecciona una materia</option>
+                                    {materias.map(m => (
+                                        <option key={m.id_materia} value={m.id_materia}>
+                                            {m.clave_materia} — {m.nombre_materia}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={closeModal} disabled={formLoading}
+                                        className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={formLoading}
+                                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
+                                    {formLoading && <Loader2 size={16} className="animate-spin"/>}
+                                    {editing ? 'Guardar cambios' : 'Crear grupo'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {integrantesModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="text-lg font-bold text-gray-900">Alumnos
+                                — {integrantesModal.nombre_grupo}</h2>
+                            <button onClick={() => setIntegrantesModal(null)}
+                                    className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
+                        </div>
+                        <div className="flex gap-2 mb-4">
+                            <select value={addAlumnoId} onChange={(e) => setAddAlumnoId(e.target.value)}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white text-sm">
+                                <option value="">Inscribir alumno...</option>
+                                {alumnos
+                                    .filter(a => !integrantesModal.alumnos?.find(ia => ia.id_alumno === a.id_alumno))
+                                    .map(a => (
+                                        <option key={a.id_alumno} value={a.id_alumno}>{a.nombre}</option>
+                                    ))}
+                            </select>
+                            <button onClick={handleAddAlumno} disabled={!addAlumnoId || integrantesLoading}
+                                    className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
+                                {integrantesLoading ? <Loader2 size={16} className="animate-spin"/> :
+                                    <UserPlus size={16}/>}
+                            </button>
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {integrantesModal.alumnos?.length > 0 ? (
+                                integrantesModal.alumnos.map(al => (
+                                    <div key={al.id_alumno}
+                                         className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-xl">
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-7 h-7 rounded-full bg-green-500 text-white text-xs flex items-center justify-center font-bold uppercase">
+                                                {al.nombre.charAt(0)}
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-700">{al.nombre}</span>
+                                        </div>
+                                        <button onClick={() => handleRemoveAlumno(al.id_alumno)}
+                                                disabled={integrantesLoading}
+                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                            <UserMinus size={15}/>
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-center text-sm text-gray-400 py-4">Sin alumnos inscritos</p>
+                            )}
+                        </div>
+                        <button onClick={() => setIntegrantesModal(null)}
+                                className="w-full mt-4 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="bg-red-100 p-2 rounded-lg"><Trash2 className="text-red-600" size={20}/>
+                            </div>
+                            <h2 className="text-lg font-bold text-gray-900">Eliminar grupo</h2>
+                        </div>
+                        <p className="text-gray-600 mb-1">¿Estás seguro de eliminar:</p>
+                        <p className="font-semibold text-gray-900 mb-4">{deleteTarget.nombre_grupo}</p>
+                        <p className="text-xs text-gray-400 mb-5">Si tiene equipos asociados no podrá eliminarse.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDeleteTarget(null)} disabled={deleteLoading}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
+                                Cancelar
+                            </button>
+                            <button onClick={handleDelete} disabled={deleteLoading}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
+                                {deleteLoading && <Loader2 size={16} className="animate-spin"/>}
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-    </div>
-  );
+    )
 }
