@@ -12,12 +12,6 @@ export const getAlumnoById = async (id) => {
     return response.data
 }
 
-// Esta es la ruta para las estadísticas del dashboard que tienes en tu controller
-export const getStudentStats = async () => {
-    const response = await apiClient.get('/alumnos/stats/dashboard')
-    return response.data
-}
-
 export const createAlumno = async (data) => {
     const response = await apiClient.post('/alumnos', data)
     return response.data

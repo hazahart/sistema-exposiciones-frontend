@@ -78,41 +78,41 @@ export default function Exposiciones() {
         }
     }, [page])
 
-    const fetchEquipos = async () => {
-        try {
-            const res = await apiClient.get('/equipos', {params: {size: 100}})
-            setEquipos(res.data.content || res.data)
-        } catch {
-            // silencioso
-        }
-    }
-
     useEffect(() => {
         fetchExposiciones()
     }, [fetchExposiciones])
+
     useEffect(() => {
-        if (isAdmin) fetchEquipos()
-    }, [isAdmin])
+        const fetchEquipos = async () => {
+            try {
+                const res = await apiClient.get('/equipos', {params: {size: 100}})
+                setEquipos(res.data.content || [])
+            } catch {
+            }
+        }
+        fetchEquipos()
+    }, [])
+
+    const getNombreEquipo = (id) => {
+        const eq = equipos.find(e => e.id_equipo === id)
+        return eq ? eq.nombre_equipo : `Equipo #${id}`
+    }
 
     const openCreate = () => {
-        setEditing(null)
-        setForm(EMPTY_FORM)
+        setEditing(null);
+        setForm(EMPTY_FORM);
         setModalOpen(true)
     }
 
     const openEdit = (expo) => {
         setEditing(expo)
-        setForm({
-            tema: expo.tema,
-            fecha_programada: toInputDatetime(expo.fecha_programada),
-            id_equipo: expo.id_equipo
-        })
+        setForm({tema: expo.tema, fecha_programada: toInputDatetime(expo.fecha_programada), id_equipo: expo.id_equipo})
         setModalOpen(true)
     }
 
     const closeModal = () => {
-        setModalOpen(false)
-        setEditing(null)
+        setModalOpen(false);
+        setEditing(null);
         setForm(EMPTY_FORM)
     }
 
@@ -139,8 +139,7 @@ export default function Exposiciones() {
             closeModal()
             fetchExposiciones()
         } catch (err) {
-            const msg = err.response?.data?.message || 'Error al guardar la exposición'
-            toast.error(msg)
+            toast.error(err.response?.data?.message || 'Error al guardar la exposición')
         } finally {
             setFormLoading(false)
         }
@@ -155,8 +154,7 @@ export default function Exposiciones() {
             if (exposiciones.length === 1 && page > 0) setPage(page - 1)
             else fetchExposiciones()
         } catch (err) {
-            const msg = err.response?.data?.message || 'Error al eliminar la exposición'
-            toast.error(msg)
+            toast.error(err.response?.data?.message || 'Error al eliminar la exposición')
         } finally {
             setDeleteLoading(false)
         }
@@ -176,12 +174,9 @@ export default function Exposiciones() {
                     </p>
                 </div>
                 {isAdmin && (
-                    <button
-                        onClick={openCreate}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all shadow-sm"
-                    >
-                        <Plus size={18}/>
-                        Programar exposición
+                    <button onClick={openCreate}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-all shadow-sm">
+                        <Plus size={18}/>Programar exposición
                     </button>
                 )}
             </div>
@@ -189,13 +184,12 @@ export default function Exposiciones() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center h-48 text-gray-400">
-                        <Loader2 className="animate-spin mr-2 text-green-600" size={28}/>
-                        <span>Cargando exposiciones...</span>
+                        <Loader2 className="animate-spin mr-2 text-green-600"
+                                 size={28}/><span>Cargando exposiciones...</span>
                     </div>
                 ) : error ? (
                     <div className="flex items-center justify-center h-48 text-red-500 gap-2">
-                        <AlertCircle size={20}/>
-                        <span>{error}</span>
+                        <AlertCircle size={20}/><span>{error}</span>
                     </div>
                 ) : exposiciones.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-gray-400">
@@ -213,14 +207,10 @@ export default function Exposiciones() {
                                 <div className="flex-1 min-w-0">
                                     <p className="font-semibold text-gray-900 truncate">{expo.tema}</p>
                                     <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={13}/>
-                        {formatFecha(expo.fecha_programada)}
-                    </span>
-                                        <span className="flex items-center gap-1">
-                      <Users size={13}/>
-                      Equipo #{expo.id_equipo}
-                    </span>
+                                        <span className="flex items-center gap-1"><Calendar
+                                            size={13}/>{formatFecha(expo.fecha_programada)}</span>
+                                        <span className="flex items-center gap-1"><Users
+                                            size={13}/>{getNombreEquipo(expo.id_equipo)}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 flex-shrink-0">
@@ -232,18 +222,14 @@ export default function Exposiciones() {
                                     )}
                                     {isAdmin && (
                                         <div className="flex gap-1">
-                                            <button
-                                                onClick={() => openEdit(expo)}
-                                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                                                title="Editar"
-                                            >
+                                            <button onClick={() => openEdit(expo)}
+                                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                    title="Editar">
                                                 <Pencil size={15}/>
                                             </button>
-                                            <button
-                                                onClick={() => setDeleteTarget(expo)}
-                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                title="Eliminar"
-                                            >
+                                            <button onClick={() => setDeleteTarget(expo)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Eliminar">
                                                 <Trash2 size={15}/>
                                             </button>
                                         </div>
@@ -259,18 +245,12 @@ export default function Exposiciones() {
                 <div className="flex items-center justify-between mt-4 px-1">
                     <p className="text-sm text-gray-500">Página {page + 1} de {totalPages}</p>
                     <div className="flex gap-2">
-                        <button
-                            onClick={() => setPage(p => p - 1)}
-                            disabled={page === 0}
-                            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        >
+                        <button onClick={() => setPage(p => p - 1)} disabled={page === 0}
+                                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                             <ChevronLeft size={16}/> Anterior
                         </button>
-                        <button
-                            onClick={() => setPage(p => p + 1)}
-                            disabled={page >= totalPages - 1}
-                            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                        >
+                        <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}
+                                className="flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                             Siguiente <ChevronRight size={16}/>
                         </button>
                     </div>
@@ -282,70 +262,45 @@ export default function Exposiciones() {
                     <div
                         className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between mb-5">
-                            <h2 className="text-lg font-bold text-gray-900">
-                                {editing ? 'Editar exposición' : 'Programar exposición'}
-                            </h2>
-                            <button onClick={closeModal}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors">
-                                <X size={20}/>
+                            <h2 className="text-lg font-bold text-gray-900">{editing ? 'Editar exposición' : 'Programar exposición'}</h2>
+                            <button onClick={closeModal} className="text-gray-400 hover:text-gray-600"><X size={20}/>
                             </button>
                         </div>
-
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
-                                <input
-                                    type="text"
-                                    value={form.tema}
-                                    onChange={(e) => setForm(f => ({...f, tema: e.target.value}))}
-                                    placeholder="Ej: Arquitectura de Microservicios"
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                    disabled={formLoading}
-                                    required
-                                />
+                                <input type="text" value={form.tema}
+                                       onChange={(e) => setForm(f => ({...f, tema: e.target.value}))}
+                                       placeholder="Ej: Arquitectura de Microservicios"
+                                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                       disabled={formLoading} required/>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Fecha y hora</label>
-                                <input
-                                    type="datetime-local"
-                                    value={form.fecha_programada}
-                                    onChange={(e) => setForm(f => ({...f, fecha_programada: e.target.value}))}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                    disabled={formLoading}
-                                    required
-                                />
+                                <input type="datetime-local" value={form.fecha_programada}
+                                       onChange={(e) => setForm(f => ({...f, fecha_programada: e.target.value}))}
+                                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                       disabled={formLoading} required/>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Equipo</label>
-                                <select
-                                    value={form.id_equipo}
-                                    onChange={(e) => setForm(f => ({...f, id_equipo: e.target.value}))}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-                                    disabled={formLoading}
-                                    required
-                                >
+                                <select value={form.id_equipo}
+                                        onChange={(e) => setForm(f => ({...f, id_equipo: e.target.value}))}
+                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                                        disabled={formLoading} required>
                                     <option value="">Selecciona un equipo</option>
                                     {equipos.map(eq => (
-                                        <option key={eq.id_equipo} value={eq.id_equipo}>
-                                            {eq.nombre_equipo}
-                                        </option>
+                                        <option key={eq.id_equipo} value={eq.id_equipo}>{eq.nombre_equipo}</option>
                                     ))}
                                 </select>
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    disabled={formLoading}
-                                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all"
-                                >
+                                <button type="button" onClick={closeModal} disabled={formLoading}
+                                        className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
                                     Cancelar
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={formLoading}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all disabled:opacity-60"
-                                >
+                                <button type="submit" disabled={formLoading}
+                                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
                                     {formLoading && <Loader2 size={16} className="animate-spin"/>}
                                     {editing ? 'Guardar cambios' : 'Programar'}
                                 </button>
@@ -360,29 +315,21 @@ export default function Exposiciones() {
                     <div
                         className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 animate-in fade-in zoom-in-95 duration-200">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="bg-red-100 p-2 rounded-lg">
-                                <Trash2 className="text-red-600" size={20}/>
+                            <div className="bg-red-100 p-2 rounded-lg"><Trash2 className="text-red-600" size={20}/>
                             </div>
                             <h2 className="text-lg font-bold text-gray-900">Eliminar exposición</h2>
                         </div>
                         <p className="text-gray-600 mb-1">¿Estás seguro de eliminar la exposición:</p>
                         <p className="font-semibold text-gray-900 mb-4">{deleteTarget.tema}</p>
-                        <p className="text-xs text-gray-400 mb-5">
-                            Esta acción no se puede deshacer. Si tiene evaluaciones asociadas no podrá eliminarse.
-                        </p>
+                        <p className="text-xs text-gray-400 mb-5">Si tiene evaluaciones asociadas no podrá
+                            eliminarse.</p>
                         <div className="flex gap-3">
-                            <button
-                                onClick={() => setDeleteTarget(null)}
-                                disabled={deleteLoading}
-                                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all"
-                            >
+                            <button onClick={() => setDeleteTarget(null)} disabled={deleteLoading}
+                                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50">
                                 Cancelar
                             </button>
-                            <button
-                                onClick={handleDelete}
-                                disabled={deleteLoading}
-                                className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl transition-all disabled:opacity-60"
-                            >
+                            <button onClick={handleDelete} disabled={deleteLoading}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl disabled:opacity-60">
                                 {deleteLoading && <Loader2 size={16} className="animate-spin"/>}
                                 Eliminar
                             </button>
