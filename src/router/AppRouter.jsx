@@ -10,6 +10,7 @@ import Materias from "../pages/materias/Materias.jsx";
 import Alumnos from '../pages/alumnos/alumnos.jsx';
 import Exposiciones from "../pages/exposiciones/Exposiciones.jsx";
 import Evaluaciones from "../pages/evaluaciones/Evaluaciones.jsx";
+import Criterios from '../pages/criterios/Criterios'
 
 const PrivateRoute = ({children}) => {
     const {isAuthenticated} = useAuth();
@@ -46,6 +47,7 @@ const AppRouter = () => {
                     <Route path="alumnos" element={<Alumnos/>}/>
                     <Route path="exposiciones" element={<Exposiciones/>}/>
                     <Route path="evaluaciones" element={<Evaluaciones/>}/>
+                    <Route path="criterios" element={<Criterios/>}/>
                 </Route>
 
                 <Route path="*" element={<Navigate to="/" replace/>}/>
