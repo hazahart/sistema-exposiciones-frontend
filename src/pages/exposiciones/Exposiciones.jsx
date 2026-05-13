@@ -165,7 +165,6 @@ export default function Exposiciones() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -187,7 +186,6 @@ export default function Exposiciones() {
                 )}
             </div>
 
-            {/* Lista */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center h-48 text-gray-400">
@@ -257,7 +255,6 @@ export default function Exposiciones() {
                 )}
             </div>
 
-            {/* Paginación */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 px-1">
                     <p className="text-sm text-gray-500">Página {page + 1} de {totalPages}</p>
@@ -280,7 +277,6 @@ export default function Exposiciones() {
                 </div>
             )}
 
-            {/* Modal Crear / Editar */}
             {modalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div
@@ -359,7 +355,6 @@ export default function Exposiciones() {
                 </div>
             )}
 
-            {/* Modal Confirmar Eliminar */}
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div

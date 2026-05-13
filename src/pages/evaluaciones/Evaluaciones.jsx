@@ -167,7 +167,6 @@ export default function Evaluaciones() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -187,7 +186,6 @@ export default function Evaluaciones() {
                 </button>
             </div>
 
-            {/* Lista */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center h-48 text-gray-400">
@@ -262,7 +260,6 @@ export default function Evaluaciones() {
                 )}
             </div>
 
-            {/* Paginación */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 px-1">
                     <p className="text-sm text-gray-500">Página {page + 1} de {totalPages}</p>
@@ -285,7 +282,6 @@ export default function Evaluaciones() {
                 </div>
             )}
 
-            {/* Modal Evaluar */}
             {modalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div
@@ -305,7 +301,6 @@ export default function Evaluaciones() {
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-5">
 
-                                {/* Selector de exposición */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Exposición a evaluar
@@ -332,7 +327,6 @@ export default function Evaluaciones() {
                                     )}
                                 </div>
 
-                                {/* Rúbrica dinámica */}
                                 {criterios.length > 0 && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -364,7 +358,6 @@ export default function Evaluaciones() {
                                     </div>
                                 )}
 
-                                {/* Calificación final calculada */}
                                 {todosCalificados() && criterios.length > 0 && (
                                     <div
                                         className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-3 rounded-xl">
@@ -400,7 +393,6 @@ export default function Evaluaciones() {
                 </div>
             )}
 
-            {/* Modal Ver Detalles */}
             {detalleTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div
@@ -446,7 +438,6 @@ export default function Evaluaciones() {
                 </div>
             )}
 
-            {/* Modal Confirmar Eliminar */}
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div

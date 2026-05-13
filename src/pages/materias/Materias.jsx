@@ -116,7 +116,6 @@ export default function Materias() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -138,7 +137,6 @@ export default function Materias() {
                 )}
             </div>
 
-            {/* Buscador */}
             <form onSubmit={handleSearch} className="mb-4 flex gap-2">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
@@ -171,7 +169,6 @@ export default function Materias() {
                 )}
             </form>
 
-            {/* Tabla */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 {loading ? (
                     <div className="flex items-center justify-center h-48 text-gray-400">
@@ -236,7 +233,6 @@ export default function Materias() {
                 )}
             </div>
 
-            {/* Paginación */}
             {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 px-1">
                     <p className="text-sm text-gray-500">
@@ -261,7 +257,6 @@ export default function Materias() {
                 </div>
             )}
 
-            {/* Modal Crear / Editar */}
             {modalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div
@@ -328,7 +323,6 @@ export default function Materias() {
                 </div>
             )}
 
-            {/* Modal Confirmar Eliminar */}
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                     <div
