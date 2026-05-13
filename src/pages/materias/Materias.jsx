@@ -187,49 +187,51 @@ export default function Materias() {
                         {search && <p className="text-xs mt-1">Intenta con otro término de búsqueda</p>}
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead>
-                        <tr className="bg-gray-50 border-b border-gray-100">
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Clave</th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
-                            {isAdmin &&
-                                <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                        {materias.map((materia) => (
-                            <tr key={materia.id_materia} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                            <tr className="bg-gray-50 border-b border-gray-100">
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Clave</th>
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+                                {isAdmin &&
+                                    <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                            {materias.map((materia) => (
+                                <tr key={materia.id_materia} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4">
                     <span
                         className="inline-block bg-green-50 text-green-700 text-xs font-mono font-semibold px-2.5 py-1 rounded-lg">
                       {materia.clave_materia}
                     </span>
-                                </td>
-                                <td className="px-6 py-4 text-gray-800 font-medium">{materia.nombre_materia}</td>
-                                {isAdmin && (
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            <button
-                                                onClick={() => openEdit(materia)}
-                                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                                                title="Editar"
-                                            >
-                                                <Pencil size={16}/>
-                                            </button>
-                                            <button
-                                                onClick={() => confirmDelete(materia)}
-                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                title="Eliminar"
-                                            >
-                                                <Trash2 size={16}/>
-                                            </button>
-                                        </div>
                                     </td>
-                                )}
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
+                                    <td className="px-6 py-4 text-gray-800 font-medium">{materia.nombre_materia}</td>
+                                    {isAdmin && (
+                                        <td className="px-6 py-4">
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => openEdit(materia)}
+                                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                    title="Editar"
+                                                >
+                                                    <Pencil size={16}/>
+                                                </button>
+                                                <button
+                                                    onClick={() => confirmDelete(materia)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 size={16}/>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

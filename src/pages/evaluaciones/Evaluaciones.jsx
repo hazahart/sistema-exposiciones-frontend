@@ -204,59 +204,61 @@ export default function Evaluaciones() {
                         <p className="text-xs mt-1">Evalúa una exposición usando el botón de arriba</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead>
-                        <tr className="bg-gray-50 border-b border-gray-100">
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Exposición</th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Evaluador</th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
-                            <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Calificación</th>
-                            <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                        {evaluaciones.map((ev) => (
-                            <tr key={ev.id_evaluacion} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 text-gray-800 font-medium">
-                                    Exposición #{ev.id_exposicion}
-                                </td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">
-                                    Alumno #{ev.id_alumno_evaluador}
-                                </td>
-                                <td className="px-6 py-4 text-gray-500 text-sm">
-                                    {new Date(ev.fecha_registro).toLocaleDateString('es-MX', {
-                                        day: 'numeric', month: 'short', year: 'numeric'
-                                    })}
-                                </td>
-                                <td className="px-6 py-4 text-center">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                            <tr className="bg-gray-50 border-b border-gray-100">
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Exposición</th>
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Evaluador</th>
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Calificación</th>
+                                <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                            {evaluaciones.map((ev) => (
+                                <tr key={ev.id_evaluacion} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4 text-gray-800 font-medium">
+                                        Exposición #{ev.id_exposicion}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-600 text-sm">
+                                        Alumno #{ev.id_alumno_evaluador}
+                                    </td>
+                                    <td className="px-6 py-4 text-gray-500 text-sm">
+                                        {new Date(ev.fecha_registro).toLocaleDateString('es-MX', {
+                                            day: 'numeric', month: 'short', year: 'numeric'
+                                        })}
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
                     <span className={`text-xl font-black ${getCalColor(ev.calificacion_final)}`}>
                       {ev.calificacion_final}
                     </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex justify-end gap-2">
-                                        <button
-                                            onClick={() => setDetalleTarget(ev)}
-                                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                                            title="Ver detalles"
-                                        >
-                                            <Star size={15}/>
-                                        </button>
-                                        {isAdmin && (
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-end gap-2">
                                             <button
-                                                onClick={() => setDeleteTarget(ev)}
-                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                title="Eliminar"
+                                                onClick={() => setDetalleTarget(ev)}
+                                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                title="Ver detalles"
                                             >
-                                                <Trash2 size={15}/>
+                                                <Star size={15}/>
                                             </button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
+                                            {isAdmin && (
+                                                <button
+                                                    onClick={() => setDeleteTarget(ev)}
+                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 size={15}/>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

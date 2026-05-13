@@ -255,52 +255,54 @@ export default function Grupos() {
                         <p className="text-sm">No se encontraron grupos</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead>
-                        <tr className="bg-gray-50 border-b border-gray-100">
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Grupo</th>
-                            <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Materia</th>
-                            <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Alumnos</th>
-                            {isAdmin &&
-                                <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
-                        </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                        {filteredGrupos.map((grupo) => (
-                            <tr key={grupo.id_grupo} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 font-medium text-gray-900">{grupo.nombre_grupo}</td>
-                                <td className="px-6 py-4 text-gray-600 text-sm">{getNombreMateria(grupo.id_materia)}</td>
-                                <td className="px-6 py-4 text-center">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                            <tr className="bg-gray-50 border-b border-gray-100">
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Grupo</th>
+                                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Materia</th>
+                                <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Alumnos</th>
+                                {isAdmin &&
+                                    <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
+                            </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                            {filteredGrupos.map((grupo) => (
+                                <tr key={grupo.id_grupo} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4 font-medium text-gray-900">{grupo.nombre_grupo}</td>
+                                    <td className="px-6 py-4 text-gray-600 text-sm">{getNombreMateria(grupo.id_materia)}</td>
+                                    <td className="px-6 py-4 text-center">
                     <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-600">
                       <Users size={14} className="text-green-500"/>
                         {grupo.alumnos?.length || 0}
                     </span>
-                                </td>
-                                {isAdmin && (
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-end gap-2">
-                                            <button onClick={() => setIntegrantesModal(grupo)}
-                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="Gestionar alumnos">
-                                                <UserPlus size={15}/>
-                                            </button>
-                                            <button onClick={() => openEdit(grupo)}
-                                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                                                    title="Editar">
-                                                <Pencil size={16}/>
-                                            </button>
-                                            <button onClick={() => setDeleteTarget(grupo)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Eliminar">
-                                                <Trash2 size={16}/>
-                                            </button>
-                                        </div>
                                     </td>
-                                )}
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
+                                    {isAdmin && (
+                                        <td className="px-6 py-4">
+                                            <div className="flex justify-end gap-2">
+                                                <button onClick={() => setIntegrantesModal(grupo)}
+                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                        title="Gestionar alumnos">
+                                                    <UserPlus size={15}/>
+                                                </button>
+                                                <button onClick={() => openEdit(grupo)}
+                                                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                        title="Editar">
+                                                    <Pencil size={16}/>
+                                                </button>
+                                                <button onClick={() => setDeleteTarget(grupo)}
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                        title="Eliminar">
+                                                    <Trash2 size={16}/>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

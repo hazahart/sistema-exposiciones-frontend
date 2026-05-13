@@ -31,6 +31,12 @@ const ESTADO_LABEL = {
     pendiente: 'Pendiente',
 }
 
+const formatFechaCorta = (fecha) =>
+    new Date(fecha).toLocaleDateString('es-MX', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    })
+
 const formatFecha = (fecha) =>
     new Date(fecha).toLocaleDateString('es-MX', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -163,7 +169,7 @@ export default function Exposiciones() {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <Presentation className="text-green-600" size={26}/>
@@ -200,7 +206,7 @@ export default function Exposiciones() {
                     <div className="divide-y divide-gray-50">
                         {exposiciones.map((expo) => (
                             <div key={expo.id_exposicion}
-                                 className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                                 className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
                                 <div className="bg-green-50 text-green-600 p-3 rounded-xl flex-shrink-0">
                                     <Presentation size={20}/>
                                 </div>
@@ -208,12 +214,12 @@ export default function Exposiciones() {
                                     <p className="font-semibold text-gray-900 truncate">{expo.tema}</p>
                                     <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
                                         <span className="flex items-center gap-1"><Calendar
-                                            size={13}/>{formatFecha(expo.fecha_programada)}</span>
+                                            size={13}/>{formatFechaCorta(expo.fecha_programada)}</span>
                                         <span className="flex items-center gap-1"><Users
                                             size={13}/>{getNombreEquipo(expo.id_equipo)}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 flex-shrink-0">
+                                <div className="flex items-center gap-2 flex-wrap sm:flex-shrink-0">
                                     {expo.estado && (
                                         <span
                                             className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ESTADO_BADGE[expo.estado]}`}>
