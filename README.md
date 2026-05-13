@@ -101,3 +101,26 @@ src/
 | Gustavo Ramírez Mireles | Materias, Exposiciones, Evaluaciones |
 | Vanessa Fernanda Arreola García | Login, Grupos |
 | Luis Ángel Cruz Guerrero | Dashboard, Alumnos, Equipos |
+
+## Screenshots
+
+### Login
+![Login](screenshots/login.png)
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Materias
+![Materias](screenshots/materias.png)
+
+### Grupos
+![Grupos](screenshots/grupos.png)
+
+### Equipos
+![Equipos](screenshots/equipos.png)
+
+### Exposiciones
+![Exposiciones](screenshots/exposiciones.png)
+
+### Criterios
+![Criterios](screenshots/criterios.png)
